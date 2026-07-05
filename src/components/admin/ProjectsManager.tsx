@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { getProjects, Project } from '@/lib/services';
 import { addProject, updateProject, deleteProject, uploadImageToCloudinary } from '@/lib/adminServices';
+import { Trash2, Edit2, Plus, Image as ImageIcon, Loader2 } from 'lucide-react';
 
 export default function ProjectsManager() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProject, setEditingProject] = useState<Partial<Project> | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -22,16 +24,41 @@ export default function ProjectsManager() {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setUploading(true);
+      setUploadingImage(true);
       try {
         const url = await uploadImageToCloudinary(e.target.files[0]);
         setEditingProject((prev) => ({ ...prev, projectImage: url }));
       } catch (err) {
         alert('Failed to upload image');
       } finally {
-        setUploading(false);
+        setUploadingImage(false);
       }
     }
+  };
+
+  const handleScreenshotsUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setUploadingScreenshots(true);
+      try {
+        const files = Array.from(e.target.files);
+        const urls = await Promise.all(files.map(f => uploadImageToCloudinary(f)));
+        setEditingProject((prev) => ({ 
+          ...prev, 
+          screenshots: [...(prev?.screenshots || []), ...urls] 
+        }));
+      } catch (err) {
+        alert('Failed to upload screenshots');
+      } finally {
+        setUploadingScreenshots(false);
+      }
+    }
+  };
+
+  const removeScreenshot = (indexToRemove: number) => {
+    setEditingProject((prev) => ({
+      ...prev,
+      screenshots: prev?.screenshots?.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -64,63 +91,139 @@ export default function ProjectsManager() {
     }
   };
 
-  if (loading) return <div>Loading projects...</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center py-20">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Projects</h2>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-dark-bg p-6 rounded-2xl border border-white/5 shadow-xl">
+        <div>
+          <h2 className="text-3xl font-extrabold text-white tracking-tight">Projects</h2>
+          <p className="text-gray-400 mt-1 text-sm">Manage your portfolio projects and case studies.</p>
+        </div>
         <button
-          onClick={() => setEditingProject({ projectName: '', projectDescription: '', projectImage: '', projectLanguages: [], links: [], category: '', status: '', isFeatured: false })}
-          className="bg-primary text-dark-bg px-4 py-2 rounded font-bold"
+          onClick={() => setEditingProject({ projectName: '', projectDescription: '', projectImage: '', projectLanguages: [], links: [], category: '', status: '', isFeatured: false, screenshots: [] })}
+          className="bg-primary hover:bg-primary-dark text-dark-bg px-6 py-3 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(102,252,241,0.3)] hover:shadow-[0_0_25px_rgba(102,252,241,0.5)] flex items-center gap-2 transform hover:scale-105"
         >
+          <Plus className="w-5 h-5" />
           Add Project
         </button>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
-          <div key={project.id} className="glass p-4 rounded-xl border border-white/10 flex justify-between items-center">
-            <div>
-              <h3 className="font-bold text-lg">{project.projectName}</h3>
-              <p className="text-sm text-gray-400">{project.category}</p>
+          <div key={project.id} className="glass p-5 rounded-2xl border border-white/10 flex flex-col group hover:border-primary/30 transition-all duration-300">
+            <div className="relative h-48 rounded-xl overflow-hidden mb-4 bg-black/40">
+              {project.projectImage ? (
+                <img src={project.projectImage} alt={project.projectName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-500">
+                  <ImageIcon className="w-8 h-8" />
+                </div>
+              )}
+              <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => setEditingProject(project)} className="p-2 bg-black/60 hover:bg-primary text-white rounded-lg backdrop-blur-md transition-colors">
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => handleDelete(project.id)} className="p-2 bg-black/60 hover:bg-red-500 text-white rounded-lg backdrop-blur-md transition-colors">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => setEditingProject(project)} className="text-primary hover:underline">Edit</button>
-              <button onClick={() => handleDelete(project.id)} className="text-red-500 hover:underline">Delete</button>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold px-2 py-1 rounded bg-primary/10 text-primary uppercase tracking-wider">{project.category}</span>
+                {project.isFeatured && <span className="text-xs font-bold px-2 py-1 rounded bg-yellow-500/10 text-yellow-500 uppercase tracking-wider">Featured</span>}
+              </div>
+              <h3 className="font-bold text-xl text-white mb-1">{project.projectName}</h3>
+              <p className="text-sm text-gray-400 line-clamp-2">{project.projectDescription}</p>
             </div>
           </div>
         ))}
       </div>
 
       {editingProject && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <div className="glass p-6 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-4">{editingProject.id ? 'Edit Project' : 'Add Project'}</h3>
-            <form onSubmit={handleSave} className="space-y-4">
-              <div>
-                <label className="block text-sm mb-1">Project Name</label>
-                <input required type="text" className="w-full bg-dark-bg border border-white/10 rounded px-3 py-2 text-white" value={editingProject.projectName || ''} onChange={e => setEditingProject({...editingProject, projectName: e.target.value})} />
-              </div>
-              <div>
-                <label className="block text-sm mb-1">Category</label>
-                <input required type="text" className="w-full bg-dark-bg border border-white/10 rounded px-3 py-2 text-white" value={editingProject.category || ''} onChange={e => setEditingProject({...editingProject, category: e.target.value})} />
-              </div>
-              <div>
-                <label className="block text-sm mb-1">Description</label>
-                <textarea required className="w-full bg-dark-bg border border-white/10 rounded px-3 py-2 text-white h-24" value={editingProject.projectDescription || ''} onChange={e => setEditingProject({...editingProject, projectDescription: e.target.value})} />
-              </div>
-              <div>
-                <label className="block text-sm mb-1">Main Image</label>
-                <div className="flex gap-4 items-center">
-                  {editingProject.projectImage && <img src={editingProject.projectImage} alt="Preview" className="h-16 w-16 object-cover rounded" />}
-                  <input type="file" onChange={handleImageUpload} className="text-sm" accept="image/*" />
-                  {uploading && <span className="text-sm text-primary">Uploading...</span>}
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="glass p-8 rounded-3xl w-full max-w-4xl my-8 border border-white/10 shadow-2xl relative">
+            <button onClick={() => setEditingProject(null)} className="absolute top-6 right-6 text-gray-400 hover:text-white">✕</button>
+            <h3 className="text-2xl font-bold mb-8 text-white">{editingProject.id ? '✏️ Edit Project' : '✨ Add New Project'}</h3>
+            
+            <form onSubmit={handleSave} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Project Name</label>
+                    <input required type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. My Cash App" value={editingProject.projectName || ''} onChange={e => setEditingProject({...editingProject, projectName: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Category</label>
+                    <input required type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. Mobile App" value={editingProject.category || ''} onChange={e => setEditingProject({...editingProject, category: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Tech Stack (comma separated)</label>
+                    <input type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. Flutter, Dart, Firebase" value={editingProject.projectLanguages?.join(', ') || ''} onChange={e => setEditingProject({...editingProject, projectLanguages: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <input type="checkbox" id="isFeatured" className="w-5 h-5 rounded border-white/10 bg-black/40 text-primary focus:ring-primary/50" checked={editingProject.isFeatured || false} onChange={e => setEditingProject({...editingProject, isFeatured: e.target.checked})} />
+                    <label htmlFor="isFeatured" className="text-sm font-medium text-gray-300 cursor-pointer">Featured Project</label>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Description</label>
+                    <textarea required className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none h-32 resize-none" placeholder="Describe the project..." value={editingProject.projectDescription || ''} onChange={e => setEditingProject({...editingProject, projectDescription: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Main Image</label>
+                    <div className="flex gap-4 items-center bg-black/20 p-3 rounded-xl border border-white/5">
+                      {editingProject.projectImage ? (
+                        <img src={editingProject.projectImage} alt="Preview" className="h-16 w-24 object-cover rounded-lg shadow-md" />
+                      ) : (
+                        <div className="h-16 w-24 bg-black/40 rounded-lg flex items-center justify-center text-gray-500 border border-dashed border-white/20"><ImageIcon className="w-6 h-6"/></div>
+                      )}
+                      <div className="flex-1">
+                        <input type="file" onChange={handleImageUpload} className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer" accept="image/*" />
+                        {uploadingImage && <div className="text-xs text-primary mt-2 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin"/> Uploading...</div>}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 mt-6">
-                <button type="button" onClick={() => setEditingProject(null)} className="px-4 py-2 rounded text-gray-400 hover:text-white">Cancel</button>
-                <button type="submit" disabled={uploading} className="bg-primary text-dark-bg px-4 py-2 rounded font-bold disabled:opacity-50">Save</button>
+
+              {/* Screenshots Section */}
+              <div className="pt-4 border-t border-white/10">
+                <label className="block text-sm font-medium text-gray-300 mb-3">Project Screenshots</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-4">
+                  {editingProject.screenshots?.map((shot, idx) => (
+                    <div key={idx} className="relative group aspect-[9/16] rounded-xl overflow-hidden bg-black/40 border border-white/10">
+                      <img src={shot} alt={`Screenshot ${idx}`} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                        <button type="button" onClick={() => removeScreenshot(idx)} className="p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full transition-colors">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <label className="aspect-[9/16] rounded-xl border-2 border-dashed border-white/20 hover:border-primary/50 bg-black/20 flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors cursor-pointer relative overflow-hidden">
+                    <input type="file" multiple onChange={handleScreenshotsUpload} className="hidden" accept="image/*" />
+                    {uploadingScreenshots ? (
+                      <div className="flex flex-col items-center gap-2"><Loader2 className="w-6 h-6 animate-spin"/> <span className="text-xs font-medium">Uploading...</span></div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2"><Plus className="w-6 h-6"/> <span className="text-xs font-medium">Add Images</span></div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 border-t border-white/10">
+                <button type="button" onClick={() => setEditingProject(null)} className="px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="submit" disabled={uploadingImage || uploadingScreenshots} className="bg-primary hover:bg-primary-dark text-dark-bg px-8 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(102,252,241,0.3)] disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105">
+                  {editingProject.id ? 'Save Changes' : 'Create Project'}
+                </button>
               </div>
             </form>
           </div>
