@@ -66,8 +66,8 @@ export default function ProjectsManager() {
     if (!editingProject) return;
 
     try {
-      if (editingProject.id) {
-        await updateProject(editingProject.id, editingProject);
+      if (editingProject.docId) {
+        await updateProject(editingProject.docId, editingProject);
       } else {
         await addProject(editingProject as Omit<Project, 'id'>);
       }
@@ -79,10 +79,10 @@ export default function ProjectsManager() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (docId: string) => {
     if (confirm('Are you sure you want to delete this project?')) {
       try {
-        await deleteProject(id);
+        await deleteProject(docId);
         fetchProjects();
       } catch (err) {
         console.error(err);
@@ -128,7 +128,7 @@ export default function ProjectsManager() {
                 <button onClick={() => setEditingProject(project)} className="p-2 bg-black/60 hover:bg-primary text-white rounded-lg backdrop-blur-md transition-colors">
                   <Edit2 className="w-4 h-4" />
                 </button>
-                <button onClick={() => handleDelete(project.id)} className="p-2 bg-black/60 hover:bg-red-500 text-white rounded-lg backdrop-blur-md transition-colors">
+                <button onClick={() => handleDelete(project.docId!)} className="p-2 bg-black/60 hover:bg-red-500 text-white rounded-lg backdrop-blur-md transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -149,7 +149,7 @@ export default function ProjectsManager() {
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="glass p-8 rounded-3xl w-full max-w-4xl my-8 border border-white/10 shadow-2xl relative">
             <button onClick={() => setEditingProject(null)} className="absolute top-6 right-6 text-gray-400 hover:text-white">✕</button>
-            <h3 className="text-2xl font-bold mb-8 text-white">{editingProject.id ? '✏️ Edit Project' : '✨ Add New Project'}</h3>
+            <h3 className="text-2xl font-bold mb-8 text-white">{editingProject.docId ? '✏️ Edit Project' : '✨ Add New Project'}</h3>
             
             <form onSubmit={handleSave} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -222,7 +222,7 @@ export default function ProjectsManager() {
               <div className="flex justify-end gap-3 pt-6 border-t border-white/10">
                 <button type="button" onClick={() => setEditingProject(null)} className="px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
                 <button type="submit" disabled={uploadingImage || uploadingScreenshots} className="bg-primary hover:bg-primary-dark text-dark-bg px-8 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(102,252,241,0.3)] disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105">
-                  {editingProject.id ? 'Save Changes' : 'Create Project'}
+                  {editingProject.docId ? 'Save Changes' : 'Create Project'}
                 </button>
               </div>
             </form>

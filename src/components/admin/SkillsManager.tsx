@@ -24,23 +24,23 @@ export default function SkillsManager() {
     if (!editingSkill) return;
 
     try {
-      if (editingSkill.id) {
-        await updateSkill(editingSkill.id, editingSkill);
+      if (editingSkill.docId) {
+        await updateSkill(editingSkill.docId, editingSkill);
       } else {
         await addSkill(editingSkill as Omit<Skill, 'id'>);
       }
       setEditingSkill(null);
       fetchSkills();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Error saving skill');
+      alert(`Error saving skill: ${err.message || err}`);
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (docId: string) => {
     if (confirm('Are you sure you want to delete this skill group?')) {
       try {
-        await deleteSkill(id);
+        await deleteSkill(docId);
         fetchSkills();
       } catch (err) {
         console.error(err);
@@ -72,7 +72,7 @@ export default function SkillsManager() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => setEditingSkill(skill)} className="text-primary hover:underline">Edit</button>
-              <button onClick={() => handleDelete(skill.id)} className="text-red-500 hover:underline">Delete</button>
+              <button onClick={() => handleDelete(skill.docId!)} className="text-red-500 hover:underline">Delete</button>
             </div>
           </div>
         ))}
@@ -81,7 +81,7 @@ export default function SkillsManager() {
       {editingSkill && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <div className="glass p-6 rounded-2xl w-full max-w-lg">
-            <h3 className="text-xl font-bold mb-4">{editingSkill.id ? 'Edit Category' : 'Add Category'}</h3>
+            <h3 className="text-xl font-bold mb-4">{editingSkill.docId ? 'Edit Category' : 'Add Category'}</h3>
             <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-sm mb-1">Category Title</label>

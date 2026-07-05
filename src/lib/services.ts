@@ -7,6 +7,7 @@ export interface LinkModel {
 }
 
 export interface Project {
+  docId?: string;
   id: string;
   projectName: string;
   projectDescription: string;
@@ -20,6 +21,7 @@ export interface Project {
 }
 
 export interface Skill {
+  docId?: string;
   id: string;
   title: string;
   skills: string[];
@@ -34,6 +36,7 @@ export async function getProjects(): Promise<Project[]> {
     const projectsCol = collection(db, 'projects');
     const projectSnapshot = await getDocs(projectsCol);
     return projectSnapshot.docs.map(doc => ({
+      docId: doc.id,
       id: doc.id,
       ...doc.data()
     })) as Project[];
@@ -68,6 +71,7 @@ export async function getSkills(): Promise<Skill[]> {
     const skillsCol = collection(db, 'skills');
     const skillSnapshot = await getDocs(skillsCol);
     return skillSnapshot.docs.map(doc => ({
+      docId: doc.id,
       id: doc.id,
       ...doc.data()
     })) as Skill[];
