@@ -5,7 +5,7 @@ import './globals.css';
 const firaCode = Fira_Code({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://muhammad-essam.pages.dev'),
+  metadataBase: new URL('https://muhamaadessam.github.io'),
   title: 'Muhammad Essam | Flutter Developer',
   description: 'Experienced Flutter Developer building beautiful, scalable, and high-performance cross-platform applications.',
   keywords: ['Muhammad Essam', 'Flutter Developer', 'Mobile Developer', 'Dart', 'React', 'Portfolio'],
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://muhammad-essam.pages.dev/',
+    url: 'https://muhamaadessam.github.io/',
     title: 'Muhammad Essam | Flutter Developer',
     description: 'Experienced Flutter Developer building beautiful, scalable, and high-performance cross-platform applications.',
     siteName: 'Muhammad Essam Portfolio',
