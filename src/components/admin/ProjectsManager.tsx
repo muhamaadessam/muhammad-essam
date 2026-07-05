@@ -73,9 +73,9 @@ export default function ProjectsManager() {
       }
       setEditingProject(null);
       fetchProjects();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Error saving project');
+      alert(`Error saving project: ${err.message || err}`);
     }
   };
 
