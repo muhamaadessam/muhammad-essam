@@ -18,11 +18,11 @@ const LogoPatternBackground = ({ logoSrc }: { logoSrc: string }) => (
 
 export default async function Image() {
   const profilePicBuffer = await fetch(
-    new URL('../../public/profile_picture.jpg', import.meta.url)
+    'https://muhammad-essam.pages.dev/profile_picture.jpg'
   ).then((res) => res.arrayBuffer());
 
   const logoBuffer = await fetch(
-    new URL('../../public/logos/essamLogo.png', import.meta.url)
+    'https://muhammad-essam.pages.dev/logos/essamLogo.png'
   ).then((res) => res.arrayBuffer());
 
   // Edge-compatible Buffer import
