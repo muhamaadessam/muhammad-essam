@@ -6,18 +6,32 @@ export const alt = 'Muhammad Essam Portfolio';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
+const LogoPatternBackground = ({ logoSrc }: { logoSrc: string }) => (
+  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexWrap: 'wrap', opacity: 0.1, justifyContent: 'center', alignItems: 'center', padding: '10px' }}>
+    {Array.from({ length: 45 }).map((_, i) => (
+      <div key={i} style={{ width: '130px', height: '120px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <img src={logoSrc} width={70} height={70} style={{ objectFit: 'contain' }} />
+      </div>
+    ))}
+  </div>
+);
+
 export default async function Image() {
   const profilePicBuffer = await fetch(
     new URL('../../public/profile_picture.jpg', import.meta.url)
   ).then((res) => res.arrayBuffer());
 
-  // Convert ArrayBuffer to Base64 (Edge-safe)
-  let binary = '';
-  const bytes = new Uint8Array(profilePicBuffer);
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  const base64Image = btoa(binary);
+  const logoBuffer = await fetch(
+    new URL('../../public/logos/essamLogo.png', import.meta.url)
+  ).then((res) => res.arrayBuffer());
+
+  // Edge-compatible Buffer import
+  const { Buffer } = require('node:buffer');
+
+  const logoBase64 = Buffer.from(logoBuffer).toString('base64');
+  const logoSrc = `data:image/png;base64,${logoBase64}`;
+
+  const base64Image = Buffer.from(profilePicBuffer).toString('base64');
   const imgSrc = `data:image/jpeg;base64,${base64Image}`;
 
   return new ImageResponse(
@@ -37,6 +51,8 @@ export default async function Image() {
           overflow: 'hidden',
         }}
       >
+        <LogoPatternBackground logoSrc={logoSrc} />
+
         {/* Glow Effects using Primary Color #42A5F5 */}
         <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '500px', height: '500px', background: '#42A5F5', opacity: 0.15, borderRadius: '250px', filter: 'blur(80px)' }} />
         <div style={{ position: 'absolute', bottom: '-150px', left: '-100px', width: '500px', height: '500px', background: '#42A5F5', opacity: 0.1, borderRadius: '250px', filter: 'blur(80px)' }} />
