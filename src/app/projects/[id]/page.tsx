@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getProjectById, Project } from '@/lib/services';
-import { motion } from 'framer-motion';
-import { ArrowLeft, ExternalLink, Code2, LayoutDashboard, Sparkles, Database } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, ExternalLink, Code2, LayoutDashboard, Sparkles, Database, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
 
 export default function ProjectDetailsPage() {
@@ -12,6 +12,9 @@ export default function ProjectDetailsPage() {
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Lightbox state
+  const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -21,6 +24,31 @@ export default function ProjectDetailsPage() {
       });
     }
   }, [params.id]);
+
+  // Handle escape key for lightbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedScreenshotIndex(null);
+      if (e.key === 'ArrowLeft') handlePrevScreenshot();
+      if (e.key === 'ArrowRight') handleNextScreenshot();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedScreenshotIndex, project]);
+
+  const handleNextScreenshot = () => {
+    if (!project?.screenshots) return;
+    setSelectedScreenshotIndex(prev => 
+      prev !== null ? (prev === project.screenshots!.length - 1 ? 0 : prev + 1) : null
+    );
+  };
+
+  const handlePrevScreenshot = () => {
+    if (!project?.screenshots) return;
+    setSelectedScreenshotIndex(prev => 
+      prev !== null ? (prev === 0 ? project.screenshots!.length - 1 : prev - 1) : null
+    );
+  };
 
   if (loading) {
     return (
@@ -257,7 +285,7 @@ export default function ProjectDetailsPage() {
                 <img 
                   src={project.projectImage} 
                   alt={project.projectName} 
-                  className="w-full h-auto object-cover rounded-xl shadow-inner"
+                  className="w-full h-auto object-cover rounded-xl shadow-inner max-h-[800px]"
                 />
               )}
             </div>
@@ -267,50 +295,102 @@ export default function ProjectDetailsPage() {
         {/* Screenshots Section */}
         {hasScreenshots && (
           <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8 }}
-          className="relative"
-        >
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-          
-          <div className="pt-16 mb-12 flex flex-col items-center text-center">
-            <div className="inline-flex items-center justify-center p-4 rounded-2xl glass mb-6 border border-primary/20 text-primary">
-              <LayoutDashboard className="w-8 h-8" />
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="relative"
+          >
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+            
+            <div className="pt-16 mb-12 flex flex-col items-center text-center">
+              <div className="inline-flex items-center justify-center p-4 rounded-2xl glass mb-6 border border-primary/20 text-primary">
+                <LayoutDashboard className="w-8 h-8" />
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Project Gallery</h2>
+              <p className="text-gray-400 max-w-2xl text-lg font-light">A closer look at the interfaces and features built for this project.</p>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Project Gallery</h2>
-            <p className="text-gray-400 max-w-2xl text-lg font-light">A closer look at the interfaces and features built for this project.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {project.screenshots!.map((shot, index) => (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15, duration: 0.6 }}
-                className="group relative rounded-[2rem] overflow-hidden glass aspect-video cursor-pointer border border-white/5 hover:border-primary/40 transition-colors shadow-lg"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src={shot} 
-                  alt={`${project.projectName} screenshot ${index + 1}`} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-8">
-                  <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                    <span className="text-primary font-bold text-sm tracking-widest uppercase mb-1 block">Preview</span>
-                    <span className="text-white font-medium text-lg">Screenshot {index + 1}</span>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {project.screenshots!.map((shot, index) => (
+                <motion.div 
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.6 }}
+                  onClick={() => setSelectedScreenshotIndex(index)}
+                  className="group relative rounded-2xl overflow-hidden glass aspect-[9/16] cursor-pointer border border-white/10 hover:border-primary/50 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(102,252,241,0.2)] hover:-translate-y-2 bg-black/40"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src={shot} 
+                    alt={`${project.projectName} screenshot ${index + 1}`} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10]/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
+                    <span className="text-white font-medium text-sm glass px-4 py-1.5 rounded-full border border-white/20">
+                      View Full
+                    </span>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         )}
       </div>
+
+      {/* Fullscreen Lightbox Overlay */}
+      <AnimatePresence>
+        {selectedScreenshotIndex !== null && project?.screenshots && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm"
+          >
+            <button 
+              onClick={() => setSelectedScreenshotIndex(null)}
+              className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-red-500/80 hover:text-white text-gray-300 rounded-full transition-all duration-300 z-50 border border-white/10"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <button 
+              onClick={(e) => { e.stopPropagation(); handlePrevScreenshot(); }}
+              className="absolute left-4 md:left-12 p-3 bg-white/10 hover:bg-primary/80 hover:text-dark-bg text-gray-300 rounded-full transition-all duration-300 z-50 border border-white/10"
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </button>
+
+            <motion.div 
+              key={selectedScreenshotIndex}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="relative max-h-[90vh] max-w-[90vw] md:max-w-[80vw]"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={project.screenshots[selectedScreenshotIndex]} 
+                alt="Screenshot Full" 
+                className="max-h-[90vh] w-auto object-contain rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10"
+              />
+              <div className="absolute -bottom-10 left-0 right-0 text-center text-gray-400 text-sm font-medium">
+                {selectedScreenshotIndex + 1} / {project.screenshots.length}
+              </div>
+            </motion.div>
+
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleNextScreenshot(); }}
+              className="absolute right-4 md:right-12 p-3 bg-white/10 hover:bg-primary/80 hover:text-dark-bg text-gray-300 rounded-full transition-all duration-300 z-50 border border-white/10"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
