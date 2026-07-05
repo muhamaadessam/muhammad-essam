@@ -1,26 +1,68 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #42A5F5; /* Main Color */
+  --color-primary-dark: #1E88E5; /* Darker Main Color */
+  --color-accent: #64B5F6; /* Lighter Accent */
+  --color-accent-light: #90CAF9; /* Very Light Accent */
+  
+  --color-dark-bg: #282C33; /* Background Color */
+  --color-dark-card: #333842; /* Lighter Card Color */
+  --color-gray: #ABB2BF; /* Gray Color */
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F8F9FA;
+  --foreground: #212529;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --background: var(--color-dark-bg);
+  --foreground: #FFFFFF;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass {
+  background: rgba(51, 56, 66, 0.7); /* translucent version of dark-card (#333842) */
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(66, 165, 245, 0.2); /* main color border */
+}
+
+/* Hide scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333842;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #42A5F5;
 }
