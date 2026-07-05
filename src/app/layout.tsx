@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://muhammadessam.com/',
+    url: 'https://muhammad-essam.pages.dev/',
     title: 'Muhammad Essam | Flutter Developer',
     description: 'Experienced Flutter Developer building beautiful, scalable, and high-performance cross-platform applications.',
     siteName: 'Muhammad Essam Portfolio',
