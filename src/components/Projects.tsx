@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, ArrowRight } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { getProjects, Project } from '@/lib/services';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     getProjects().then((data) => {
@@ -55,7 +56,8 @@ export default function Projects() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ y: -10 }}
-                className="glass rounded-2xl overflow-hidden group flex flex-col h-full hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300"
+                onClick={() => router.push(`/projects/${project.id}`)}
+                className="cursor-pointer glass rounded-2xl overflow-hidden group flex flex-col h-full hover:border-primary/50 hover:shadow-[0_0_25px_rgba(102,252,241,0.15)] transition-all duration-500"
               >
                 {project.projectImage && (
                   <div className="w-full h-48 overflow-hidden relative bg-black/40">
@@ -63,53 +65,59 @@ export default function Projects() {
                     <img 
                       src={project.projectImage} 
                       alt={project.projectName} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center pb-4">
+                      <span className="text-white text-sm font-bold tracking-widest uppercase bg-black/50 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/20">
+                        Read Case Study
+                      </span>
+                    </div>
                   </div>
                 )}
                 
-                <div className="p-6 flex flex-col flex-grow">
-                  <div className="flex justify-between items-start mb-2">
+                <div className="p-6 flex flex-col flex-grow relative">
+                  <div className="flex justify-between items-start mb-3">
                     <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{project.projectName}</h3>
                     {project.category && (
-                      <span className="text-[10px] px-2 py-0.5 bg-primary/20 text-primary border border-primary/30 rounded-full">
+                      <span className="text-[10px] px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full font-bold uppercase tracking-wider">
                         {project.category}
                       </span>
                     )}
                   </div>
-                  <p className="text-gray-400 mb-6 flex-grow text-sm">{project.projectDescription}</p>
+                  <p className="text-gray-400 mb-6 flex-grow text-sm leading-relaxed line-clamp-3">{project.projectDescription}</p>
                   
                   {project.projectLanguages && project.projectLanguages.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-6">
-                      {project.projectLanguages.map(tech => (
-                        <span key={tech} className="text-xs px-2 py-1 rounded bg-white/5 text-gray-300">
+                      {project.projectLanguages.slice(0, 4).map(tech => (
+                        <span key={tech} className="text-[11px] px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-gray-300 font-medium tracking-wide">
                           {tech}
                         </span>
                       ))}
+                      {project.projectLanguages.length > 4 && (
+                        <span className="text-[11px] px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-gray-500 font-medium">
+                          +{project.projectLanguages.length - 4} more
+                        </span>
+                      )}
                     </div>
                   )}
                   
-                  <div className="flex items-center gap-4 mt-auto pt-4 border-t border-white/5">
-                    <Link 
-                      href={`/projects/${project.id}`}
-                      className="text-sm flex items-center gap-1.5 text-primary hover:text-primary-dark transition-colors"
-                    >
-                      <span>View Details</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                    {project.links && project.links.length > 0 && project.links.map((lnk, i) => (
-                      <a 
-                        key={i}
-                        href={lnk.link} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        className="text-sm flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors ml-auto"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        <span>{lnk.title || 'Live Demo'}</span>
-                      </a>
-                    ))}
-                  </div>
+                  {project.links && project.links.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/10">
+                      {project.links.map((lnk, i) => (
+                        <a 
+                          key={i}
+                          href={lnk.link} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          onClick={(e) => e.stopPropagation()}
+                          className="z-10 relative flex items-center gap-1.5 px-3.5 py-1.5 bg-black/40 hover:bg-primary text-[11px] font-bold text-gray-300 hover:text-dark-bg rounded-full border border-white/10 hover:border-primary transition-all duration-300 shadow-sm"
+                        >
+                          <span>{lnk.title || 'Live Demo'}</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
