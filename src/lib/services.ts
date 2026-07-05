@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, updateDoc, increment } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from './firebase';
 
 export interface LinkModel {
@@ -45,7 +45,6 @@ export async function getProjects(): Promise<Project[]> {
 
 export async function getProjectById(id: string): Promise<Project | null> {
   try {
-    // Try fetching by exact Firestore Document ID first
     const docRef = doc(db, 'projects', id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
@@ -55,8 +54,6 @@ export async function getProjectById(id: string): Promise<Project | null> {
       } as Project;
     }
 
-    // If not found, it's highly likely the document has an internal 'id' field
-    // that overwrote the doc.id in getProjects(). Let's find it from the list.
     const allProjects = await getProjects();
     const project = allProjects.find(p => String(p.id) === String(id));
     return project || null;
@@ -118,20 +115,113 @@ export async function getPortfolioData(): Promise<PortfolioData | null> {
   }
 }
 
-export async function incrementVisitorCount(): Promise<void> {
+// Client-side Telegram integration
+async function getTelegramConfig() {
+  const configDoc = await getDoc(doc(db, 'config', 'telegram'));
+  if (configDoc.exists()) {
+    return configDoc.data();
+  }
+  return null;
+}
+
+export async function trackVisitor(): Promise<void> {
   try {
-    const statsDoc = doc(db, 'stats', 'visitors');
-    await updateDoc(statsDoc, {
-      count: increment(1)
-    });
+    if (typeof window === 'undefined') return;
+
+    let visitorId = localStorage.getItem('visitor_id');
+    let isNewVisitor = false;
+
+    if (!visitorId) {
+      visitorId = Date.now().toString();
+      localStorage.setItem('visitor_id', visitorId);
+      isNewVisitor = true;
+    }
+
+    const docRef = doc(db, 'stats', 'visitors');
+    const snapshot = await getDoc(docRef);
+    
+    let totalVisits = 1;
+    let totalVisitors = 1;
+
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      const users = data.users || {};
+      const currentCount = users[visitorId] || 0;
+      
+      isNewVisitor = currentCount === 0;
+      totalVisitors = isNewVisitor ? Object.keys(users).length + 1 : Object.keys(users).length;
+      totalVisits = (data.total_visites || 0) + 1;
+
+      await setDoc(docRef, {
+        total_visitors: isNewVisitor ? increment(1) : Object.keys(users).length,
+        total_visites: increment(1),
+        users: {
+          ...users,
+          [visitorId]: currentCount + 1,
+        }
+      }, { merge: true });
+    } else {
+      await setDoc(docRef, {
+        total_visitors: 1,
+        total_visites: 1,
+        users: {
+          [visitorId]: 1,
+        }
+      });
+    }
+
+    // Send Telegram Notification
+    const config = await getTelegramConfig();
+    if (config?.bot_token && config?.chat_id) {
+      let message;
+      if (isNewVisitor) {
+        message = `🎉 *New Unique Visitor!*\n\n*Visitor ID:* \`${visitorId}\`\nA new user has visited your portfolio!\nTotal Unique Visitors: \`${totalVisitors}\``;
+      } else {
+        message = `👀 *Portfolio Visit!*\n\n*Visitor ID:* \`${visitorId}\`\nA return visitor just opened your portfolio.\nTotal Visits: \`${totalVisits}\``;
+      }
+
+      const url = `https://api.telegram.org/bot${config.bot_token}/sendMessage`;
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: config.chat_id,
+          text: message,
+          parse_mode: 'Markdown',
+        }),
+      });
+    }
   } catch (error) {
-    console.error('Error incrementing visitor count:', error);
+    console.error('Error tracking visitor:', error);
   }
 }
 
 export async function incrementCvDownloadCount(): Promise<void> {
   try {
-    await fetch('/api/cv', { method: 'POST' });
+    const statsDoc = doc(db, 'stats', 'cv_downloads');
+    await updateDoc(statsDoc, {
+      count: increment(1)
+    }).catch(() => {});
+
+    let visitorId = 'Unknown';
+    if (typeof window !== 'undefined') {
+      visitorId = localStorage.getItem('visitor_id') || 'Unknown';
+    }
+
+    const config = await getTelegramConfig();
+    if (config?.bot_token && config?.chat_id) {
+      const message = `📄 *CV Downloaded!*\n\n*Visitor ID:* \`${visitorId}\`\nSomeone just downloaded your CV!`;
+      const url = `https://api.telegram.org/bot${config.bot_token}/sendMessage`;
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: config.chat_id,
+          text: message,
+          parse_mode: 'Markdown',
+        }),
+      });
+    }
   } catch (error) {
     console.error('Error incrementing CV download count:', error);
   }
@@ -139,10 +229,17 @@ export async function incrementCvDownloadCount(): Promise<void> {
 
 export async function sendTelegramMessage(message: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/contact', {
+    const config = await getTelegramConfig();
+    if (!config?.bot_token || !config?.chat_id) return false;
+
+    const url = `https://api.telegram.org/bot${config.bot_token}/sendMessage`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({
+        chat_id: config.chat_id,
+        text: message,
+      }),
     });
     return response.ok;
   } catch (error) {

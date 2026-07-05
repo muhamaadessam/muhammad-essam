@@ -13,7 +13,9 @@ export default function Home() {
   
   useEffect(() => {
     // Track visitor on mount
-    fetch('/api/track', { method: 'POST' }).catch(err => console.error(err));
+    import('@/lib/services').then(({ trackVisitor }) => {
+      trackVisitor();
+    });
   }, []);
 
   return (
