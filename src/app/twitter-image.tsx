@@ -38,14 +38,14 @@ export default async function Image() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={profilePicData as any} 
-            width="280" 
-            height="280" 
+            width={280} 
+            height={280} 
             style={{ objectFit: 'cover' }} 
           />
         </div>
 
         {/* Text Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', zIndex: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           <div style={{ fontSize: '72px', fontWeight: '900', marginBottom: '15px', color: 'white', letterSpacing: '-1px' }}>
             Muhammad Essam
           </div>
