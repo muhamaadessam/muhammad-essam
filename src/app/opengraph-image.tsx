@@ -7,10 +7,18 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function Image() {
-  // Use Next.js edge-friendly file fetching for local assets
-  const profilePicData = await fetch(
+  const profilePicBuffer = await fetch(
     new URL('../../public/profile_picture.jpg', import.meta.url)
   ).then((res) => res.arrayBuffer());
+
+  // Convert ArrayBuffer to Base64 (Edge-safe)
+  let binary = '';
+  const bytes = new Uint8Array(profilePicBuffer);
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const base64Image = btoa(binary);
+  const imgSrc = `data:image/jpeg;base64,${base64Image}`;
 
   return new ImageResponse(
     (
@@ -37,7 +45,7 @@ export default async function Image() {
         <div style={{ display: 'flex', width: '280px', height: '280px', borderRadius: '140px', overflow: 'hidden', border: '6px solid #42A5F5', boxShadow: '0 0 40px rgba(66, 165, 245, 0.4)', marginBottom: '30px' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
-            src={profilePicData as any} 
+            src={imgSrc} 
             width={280} 
             height={280} 
             style={{ objectFit: 'cover' }} 
