@@ -86,16 +86,16 @@ export default function Projects() {
                   </div>
                   <p className="text-gray-400 mb-6 flex-grow text-sm leading-relaxed line-clamp-3">{project.projectDescription}</p>
                   
-                  {project.projectLanguages && project.projectLanguages.length > 0 && (
+                  {project.techStack && project.techStack.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-6">
-                      {project.projectLanguages.slice(0, 4).map(tech => (
+                      {project.techStack.slice(0, 4).map(tech => (
                         <span key={tech} className="text-[11px] px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-gray-300 font-medium tracking-wide">
                           {tech}
                         </span>
                       ))}
-                      {project.projectLanguages.length > 4 && (
+                      {project.techStack.length > 4 && (
                         <span className="text-[11px] px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-gray-500 font-medium">
-                          +{project.projectLanguages.length - 4} more
+                          +{project.techStack.length - 4} more
                         </span>
                       )}
                     </div>

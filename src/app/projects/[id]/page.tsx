@@ -249,11 +249,11 @@ export default function ProjectDetailsPage() {
               ))}
             </div>
 
-            {project.projectLanguages && project.projectLanguages.length > 0 && (
-              <div>
+            {project.techStack && project.techStack.length > 0 && (
+              <div className="mb-10">
                 <h3 className="text-sm text-gray-500 uppercase tracking-widest mb-4 font-semibold">Tech Stack</h3>
                 <div className="flex flex-wrap gap-2.5">
-                  {project.projectLanguages.map((tech, idx) => (
+                  {project.techStack.map((tech, idx) => (
                     <motion.span 
                       key={tech} 
                       initial={{ opacity: 0, scale: 0.8 }}
@@ -265,6 +265,24 @@ export default function ProjectDetailsPage() {
                     </motion.span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {project.keyFeaturesAndBenefits && project.keyFeaturesAndBenefits.length > 0 && (
+              <div>
+                <h3 className="text-sm text-gray-500 uppercase tracking-widest mb-4 font-semibold">Key Features & Benefits</h3>
+                <ul className="list-disc list-inside space-y-2 text-gray-300">
+                  {project.keyFeaturesAndBenefits.map((feature, idx) => (
+                    <motion.li 
+                      key={idx}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + (idx * 0.1) }}
+                    >
+                      {feature}
+                    </motion.li>
+                  ))}
+                </ul>
               </div>
             )}
           </motion.div>

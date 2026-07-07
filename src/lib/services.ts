@@ -12,7 +12,8 @@ export interface Project {
   projectName: string;
   projectDescription: string;
   projectImage: string;
-  projectLanguages: string[];
+  techStack: string[];
+  keyFeaturesAndBenefits: string[];
   links: LinkModel[];
   category: string;
   status: string;
@@ -27,8 +28,31 @@ export interface Skill {
   skills: string[];
 }
 
+export interface Experience {
+  docId?: string;
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  startDate: string; // 'YYYY-MM'
+  endDate: string | null; // 'YYYY-MM' or null for Present
+  employmentType: string; // e.g., 'Full-time', 'Part-time', 'Internship'
+  description: string[]; // Bullet points
+  skills: string[];
+  companyUrl?: string; // Link to the company's website or LinkedIn
+}
+
 export interface FunFacts {
   facts: string[];
+}
+
+export interface Message {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: any;
+  read: boolean;
 }
 
 export async function getProjects(): Promise<Project[]> {
@@ -77,6 +101,36 @@ export async function getSkills(): Promise<Skill[]> {
     })) as Skill[];
   } catch (error) {
     console.error('Error fetching skills:', error);
+    return [];
+  }
+}
+
+export async function getExperiences(): Promise<Experience[]> {
+  try {
+    const expCol = collection(db, 'experiences');
+    // Using simple getDocs and sorting on the client to avoid needing a composite index
+    const expSnapshot = await getDocs(expCol);
+    const experiences = expSnapshot.docs.map(doc => ({
+      docId: doc.id,
+      id: doc.id,
+      ...doc.data()
+    })) as Experience[];
+    
+    // Sort by endDate descending (null is highest/present), then startDate descending
+    return experiences.sort((a, b) => {
+      const aEnd = a.endDate || '9999-99'; // 'Present'
+      const bEnd = b.endDate || '9999-99'; // 'Present'
+      
+      if (aEnd !== bEnd) {
+        return bEnd.localeCompare(aEnd);
+      }
+      
+      const aStart = a.startDate || '';
+      const bStart = b.startDate || '';
+      return bStart.localeCompare(aStart);
+    });
+  } catch (error) {
+    console.error('Error fetching experiences:', error);
     return [];
   }
 }

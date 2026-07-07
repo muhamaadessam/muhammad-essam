@@ -6,11 +6,13 @@ import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import ProjectsManager from '@/components/admin/ProjectsManager';
 import SkillsManager from '@/components/admin/SkillsManager';
+import ExperienceManager from '@/components/admin/ExperienceManager';
+import MessageManager from '@/components/admin/MessageManager';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'projects' | 'skills'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'skills' | 'experience' | 'messages'>('projects');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -48,6 +50,18 @@ export default function AdminDashboard() {
           >
             Manage Skills
           </button>
+          <button
+            onClick={() => setActiveTab('experience')}
+            className={`px-4 py-2 font-bold rounded-lg transition-colors ${activeTab === 'experience' ? 'bg-primary text-dark-bg' : 'text-gray-400 hover:text-white'}`}
+          >
+            Manage Experience
+          </button>
+          <button
+            onClick={() => setActiveTab('messages')}
+            className={`px-4 py-2 font-bold rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'messages' ? 'bg-primary text-dark-bg' : 'text-gray-400 hover:text-white'}`}
+          >
+            Messages
+          </button>
         </div>
         <button
           onClick={handleLogout}
@@ -60,6 +74,8 @@ export default function AdminDashboard() {
       <div className="mt-8">
         {activeTab === 'projects' && <ProjectsManager />}
         {activeTab === 'skills' && <SkillsManager />}
+        {activeTab === 'experience' && <ExperienceManager />}
+        {activeTab === 'messages' && <MessageManager />}
       </div>
     </div>
   );

@@ -11,10 +11,15 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function test() {
-  const q = query(collection(db, "projects"), limit(1));
+  const q = query(collection(db, "projects"));
   const snap = await getDocs(q);
   snap.forEach(doc => {
-    console.log(doc.data());
+    const data = doc.data();
+    if (['Sportsmanship', 'Mudawi', 'CEO Buffet'].includes(data.projectName)) {
+      console.log("---");
+      console.log("Name:", data.projectName);
+      console.log("TechStack:", data.techStack);
+    }
   });
   process.exit(0);
 }

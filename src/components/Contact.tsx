@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { sendTelegramMessage } from '@/lib/services';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Send, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function Contact() {
@@ -24,6 +26,19 @@ ${formData.message}
     `;
 
     const success = await sendTelegramMessage(formattedMessage);
+    
+    // Save to Firestore
+    try {
+      await addDoc(collection(db, 'messages'), {
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+        createdAt: serverTimestamp(),
+        read: false
+      });
+    } catch (e) {
+      console.error('Error saving message to database', e);
+    }
     
     if (success) {
       setStatus('success');

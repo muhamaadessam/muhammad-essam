@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { getProjects, Project } from '@/lib/services';
 import { addProject, updateProject, deleteProject, uploadImageToCloudinary } from '@/lib/adminServices';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, updateDoc, doc, deleteField } from 'firebase/firestore';
 import { Trash2, Edit2, Plus, Image as ImageIcon, Loader2 } from 'lucide-react';
 
 export default function ProjectsManager() {
@@ -12,8 +14,56 @@ export default function ProjectsManager() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
 
+  const [isFeatured, setIsFeatured] = useState<boolean | null>(null);
+
   useEffect(() => {
-    fetchProjects();
+    // Auto-update the remaining 3 projects
+    const updateRemaining = async () => {
+      try {
+        console.log("Auto-updating remaining 3 projects...");
+
+        // Sportsmanship
+        await updateDoc(doc(db, 'projects', 'b4Y7VBXh3LRxMiofMv3K'), {
+          techStack: ['Flutter', 'Dart', 'Cubit / Bloc', 'Firebase', 'RESTful APIs'],
+          keyFeaturesAndBenefits: [
+            'Sports Prediction System: Predict outcomes of major Saudi football league matches like Al-Ittihad and Al-Hilal.',
+            'Points & Leaderboard: Earn points for accurate predictions and compete with fellow fans.',
+            'Interactive UI: Clean and engaging interface tailored for football enthusiasts.',
+            'Real-Time Updates: Get live updates on match outcomes and leaderboard standings.'
+          ]
+        });
+
+        // Mudawi
+        await updateDoc(doc(db, 'projects', 'm9stNpPpcvLJImPLLCPZ'), {
+          techStack: ['Flutter', 'Dart', 'Cubit / Bloc', 'Local Storage', 'Firebase'],
+          keyFeaturesAndBenefits: [
+            'Medical Reminders: Easily schedule doctor appointments and medication times.',
+            'Health Logging: Log blood pressure readings and other vital signs for future reference.',
+            'Privacy-Focused: Complete privacy with secure data storage.',
+            'Clean Interface: Simple and user-friendly design acting as your personal health assistant.'
+          ]
+        });
+
+        // CEO Buffet
+        await updateDoc(doc(db, 'projects', 'Guz12ZoE3RCISCnSzkJ3'), {
+          techStack: ['Flutter', 'Dart', 'Cubit / Bloc', 'Firebase', 'RESTful APIs'],
+          keyFeaturesAndBenefits: [
+            'Premium Catering Management: Streamline catering services and buffet arrangements for events.',
+            'Order Tracking: Manage and track food orders efficiently from preparation to delivery.',
+            'Elegant Interface: A premium UI suitable for high-end event management and client interactions.',
+            'Real-Time Synchronization: Keep all staff and management aligned with live order updates.'
+          ]
+        });
+
+        console.log("Auto-update finished successfully!");
+        alert("Remaining 3 projects updated successfully!");
+        fetchProjects();
+      } catch (e) {
+        console.error("Auto-update failed:", e);
+      }
+    };
+    
+    updateRemaining();
   }, []);
 
   const fetchProjects = async () => {
@@ -91,6 +141,31 @@ export default function ProjectsManager() {
     }
   };
 
+  const handleMigrate = async () => {
+    if (!confirm('Run migration?')) return;
+    try {
+      setLoading(true);
+      const snapshot = await getDocs(collection(db, 'projects'));
+      for (const d of snapshot.docs) {
+        const data = d.data();
+        if (data.projectLanguages) {
+          await updateDoc(doc(db, 'projects', d.id), {
+            keyFeaturesAndBenefits: data.projectLanguages,
+            techStack: [],
+            projectLanguages: deleteField()
+          });
+        }
+      }
+      alert('Migration complete!');
+      fetchProjects();
+    } catch (e) {
+      console.error(e);
+      alert('Migration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return (
     <div className="flex justify-center items-center py-20">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -104,13 +179,18 @@ export default function ProjectsManager() {
           <h2 className="text-3xl font-extrabold text-white tracking-tight">Projects</h2>
           <p className="text-gray-400 mt-1 text-sm">Manage your portfolio projects and case studies.</p>
         </div>
-        <button
-          onClick={() => setEditingProject({ projectName: '', projectDescription: '', projectImage: '', projectLanguages: [], links: [], category: '', status: '', isFeatured: false, screenshots: [] })}
-          className="bg-primary hover:bg-primary-dark text-dark-bg px-6 py-3 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(102,252,241,0.3)] hover:shadow-[0_0_25px_rgba(102,252,241,0.5)] flex items-center gap-2 transform hover:scale-105"
-        >
-          <Plus className="w-5 h-5" />
-          Add Project
-        </button>
+        <div className="flex gap-4">
+          <button onClick={handleMigrate} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition-all text-sm">
+            Run Migration
+          </button>
+          <button
+            onClick={() => setEditingProject({ projectName: '', projectDescription: '', projectImage: '', techStack: [], keyFeaturesAndBenefits: [], links: [], category: '', status: '', isFeatured: false, screenshots: [] })}
+            className="bg-primary hover:bg-primary-dark text-dark-bg px-6 py-3 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(102,252,241,0.3)] hover:shadow-[0_0_25px_rgba(102,252,241,0.5)] flex items-center gap-2 transform hover:scale-105"
+          >
+            <Plus className="w-5 h-5" />
+            Add Project
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -163,8 +243,86 @@ export default function ProjectsManager() {
                     <input required type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. Mobile App" value={editingProject.category || ''} onChange={e => setEditingProject({...editingProject, category: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Tech Stack (comma separated)</label>
-                    <input type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. Flutter, Dart, Firebase" value={editingProject.projectLanguages?.join(', ') || ''} onChange={e => setEditingProject({...editingProject, projectLanguages: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Tech Stack</label>
+                    <div className="space-y-2">
+                      {(editingProject.techStack || []).map((tech, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <input 
+                            type="text" 
+                            className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2 text-white transition-all outline-none" 
+                            placeholder="e.g. Flutter" 
+                            value={tech} 
+                            onChange={e => {
+                              const newTechStack = [...(editingProject.techStack || [])];
+                              newTechStack[idx] = e.target.value;
+                              setEditingProject({ ...editingProject, techStack: newTechStack });
+                            }} 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const newTechStack = [...(editingProject.techStack || [])];
+                              newTechStack.splice(idx, 1);
+                              setEditingProject({ ...editingProject, techStack: newTechStack });
+                            }}
+                            className="bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white px-3 py-2 rounded-xl transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setEditingProject({ ...editingProject, techStack: [...(editingProject.techStack || []), ''] });
+                        }}
+                        className="bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Tech
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Key Features & Benefits</label>
+                    <div className="space-y-2">
+                      {(editingProject.keyFeaturesAndBenefits || []).map((feature, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <input 
+                            type="text" 
+                            className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2 text-white transition-all outline-none" 
+                            placeholder="e.g. Fast performance" 
+                            value={feature} 
+                            onChange={e => {
+                              const newFeatures = [...(editingProject.keyFeaturesAndBenefits || [])];
+                              newFeatures[idx] = e.target.value;
+                              setEditingProject({ ...editingProject, keyFeaturesAndBenefits: newFeatures });
+                            }} 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const newFeatures = [...(editingProject.keyFeaturesAndBenefits || [])];
+                              newFeatures.splice(idx, 1);
+                              setEditingProject({ ...editingProject, keyFeaturesAndBenefits: newFeatures });
+                            }}
+                            className="bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white px-3 py-2 rounded-xl transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setEditingProject({ ...editingProject, keyFeaturesAndBenefits: [...(editingProject.keyFeaturesAndBenefits || []), ''] });
+                        }}
+                        className="bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Feature
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 pt-2">
                     <input type="checkbox" id="isFeatured" className="w-5 h-5 rounded border-white/10 bg-black/40 text-primary focus:ring-primary/50" checked={editingProject.isFeatured || false} onChange={e => setEditingProject({...editingProject, isFeatured: e.target.checked})} />
