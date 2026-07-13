@@ -9,15 +9,18 @@ export default function SkillsManager() {
   const [loading, setLoading] = useState(true);
   const [editingSkill, setEditingSkill] = useState<Partial<Skill> | null>(null);
 
-  useEffect(() => {
-    fetchSkills();
-  }, []);
-
-  const fetchSkills = async () => {
+  async function fetchSkills() {
     const data = await getSkills();
     setSkills(data);
     setLoading(false);
-  };
+  }
+
+  useEffect(() => {
+    getSkills().then((data) => {
+      setSkills(data);
+      setLoading(false);
+    });
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +34,9 @@ export default function SkillsManager() {
       }
       setEditingSkill(null);
       fetchSkills();
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      alert(`Error saving skill: ${err.message || err}`);
+      alert(`Error saving skill: ${err instanceof Error ? err.message : err}`);
     }
   };
 

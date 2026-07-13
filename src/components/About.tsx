@@ -49,10 +49,10 @@ export default function About() {
           <div className="max-w-4xl mx-auto glass p-8 md:p-12 rounded-2xl">
             <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
               <div className="w-full md:w-2/3">
-                <h3 className="text-2xl font-semibold mb-2 text-white">Hello, I'm Muhammad Essam!</h3>
+                <h3 className="text-2xl font-semibold mb-2 text-white">Hello, I&apos;m Muhammad Essam!</h3>
                 <h4 className="text-primary text-lg mb-6">Software Engineer</h4>
                 <p className="text-gray-300 leading-relaxed mb-8">
-                  I'm a passionate Software Engineer based in Egypt. I specialize in building beautiful, high-performance web and mobile applications. 
+                  I&apos;m a passionate Software Engineer based in Egypt. I specialize in building beautiful, high-performance web and mobile applications.
                   My goal is to craft digital experiences that leave a lasting impact.
                 </p>
                 

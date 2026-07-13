@@ -3,21 +3,24 @@
 import { useState, useEffect } from 'react';
 import { getMessages, deleteMessage, markMessageAsRead } from '@/lib/adminServices';
 import { Message } from '@/lib/services';
-import { Trash2, Mail, MailOpen } from 'lucide-react';
+import { Trash2, MailOpen } from 'lucide-react';
 
 export default function MessageManager() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchMessages();
-  }, []);
-
-  const fetchMessages = async () => {
+  async function fetchMessages() {
     const data = await getMessages();
     setMessages(data);
     setLoading(false);
-  };
+  }
+
+  useEffect(() => {
+    getMessages().then((data) => {
+      setMessages(data);
+      setLoading(false);
+    });
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this message?')) {
@@ -40,13 +43,12 @@ export default function MessageManager() {
     }
   };
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: Message['createdAt']) => {
     if (!timestamp) return 'Just now';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return new Intl.DateTimeFormat('en-US', {
       dateStyle: 'medium',
       timeStyle: 'short'
-    }).format(date);
+    }).format(timestamp.toDate());
   };
 
   if (loading) return <div>Loading messages...</div>;

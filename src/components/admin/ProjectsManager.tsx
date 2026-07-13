@@ -14,7 +14,11 @@ export default function ProjectsManager() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
 
-  const [isFeatured, setIsFeatured] = useState<boolean | null>(null);
+  async function fetchProjects() {
+    const data = await getProjects();
+    setProjects(data);
+    setLoading(false);
+  }
 
   useEffect(() => {
     // Auto-update the remaining 3 projects
@@ -66,19 +70,13 @@ export default function ProjectsManager() {
     updateRemaining();
   }, []);
 
-  const fetchProjects = async () => {
-    const data = await getProjects();
-    setProjects(data);
-    setLoading(false);
-  };
-
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setUploadingImage(true);
       try {
         const url = await uploadImageToCloudinary(e.target.files[0]);
         setEditingProject((prev) => ({ ...prev, projectImage: url }));
-      } catch (err) {
+      } catch {
         alert('Failed to upload image');
       } finally {
         setUploadingImage(false);
@@ -96,7 +94,7 @@ export default function ProjectsManager() {
           ...prev, 
           screenshots: [...(prev?.screenshots || []), ...urls] 
         }));
-      } catch (err) {
+      } catch {
         alert('Failed to upload screenshots');
       } finally {
         setUploadingScreenshots(false);
@@ -123,9 +121,9 @@ export default function ProjectsManager() {
       }
       setEditingProject(null);
       fetchProjects();
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      alert(`Error saving project: ${err.message || err}`);
+      alert(`Error saving project: ${err instanceof Error ? err.message : err}`);
     }
   };
 
@@ -198,6 +196,7 @@ export default function ProjectsManager() {
           <div key={project.id} className="glass p-5 rounded-2xl border border-white/10 flex flex-col group hover:border-primary/30 transition-all duration-300">
             <div className="relative h-48 rounded-xl overflow-hidden mb-4 bg-black/40">
               {project.projectImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={project.projectImage} alt={project.projectName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-500">
@@ -339,6 +338,7 @@ export default function ProjectsManager() {
                     <label className="block text-sm font-medium text-gray-300 mb-1.5">Main Image</label>
                     <div className="flex gap-4 items-center bg-black/20 p-3 rounded-xl border border-white/5">
                       {editingProject.projectImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={editingProject.projectImage} alt="Preview" className="h-16 w-24 object-cover rounded-lg shadow-md" />
                       ) : (
                         <div className="h-16 w-24 bg-black/40 rounded-lg flex items-center justify-center text-gray-500 border border-dashed border-white/20"><ImageIcon className="w-6 h-6"/></div>
@@ -358,6 +358,7 @@ export default function ProjectsManager() {
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-4">
                   {editingProject.screenshots?.map((shot, idx) => (
                     <div key={idx} className="relative group aspect-[9/16] rounded-xl overflow-hidden bg-black/40 border border-white/10">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={shot} alt={`Screenshot ${idx}`} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                         <button type="button" onClick={() => removeScreenshot(idx)} className="p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full transition-colors">

@@ -31,7 +31,7 @@ export default function AdminLogin() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/admin/dashboard');
-    } catch (err: any) {
+    } catch {
       setError('Invalid email or password');
       setLoading(false);
     }

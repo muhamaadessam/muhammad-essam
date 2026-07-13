@@ -15,6 +15,7 @@ export default function ProjectDetailsPage() {
   
   // Lightbox state
   const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState<number | null>(null);
+  const screenshotCount = project?.screenshots?.length ?? 0;
 
   useEffect(() => {
     if (params.id) {
@@ -29,24 +30,28 @@ export default function ProjectDetailsPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setSelectedScreenshotIndex(null);
-      if (e.key === 'ArrowLeft') handlePrevScreenshot();
-      if (e.key === 'ArrowRight') handleNextScreenshot();
+      if (e.key === 'ArrowLeft' && screenshotCount) {
+        setSelectedScreenshotIndex((index) => index === null ? null : (index - 1 + screenshotCount) % screenshotCount);
+      }
+      if (e.key === 'ArrowRight' && screenshotCount) {
+        setSelectedScreenshotIndex((index) => index === null ? null : (index + 1) % screenshotCount);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedScreenshotIndex, project]);
+  }, [screenshotCount]);
 
   const handleNextScreenshot = () => {
-    if (!project?.screenshots) return;
+    if (!screenshotCount) return;
     setSelectedScreenshotIndex(prev => 
-      prev !== null ? (prev === project.screenshots!.length - 1 ? 0 : prev + 1) : null
+      prev !== null ? (prev + 1) % screenshotCount : null
     );
   };
 
   const handlePrevScreenshot = () => {
-    if (!project?.screenshots) return;
+    if (!screenshotCount) return;
     setSelectedScreenshotIndex(prev => 
-      prev !== null ? (prev === 0 ? project.screenshots!.length - 1 : prev - 1) : null
+      prev !== null ? (prev - 1 + screenshotCount) % screenshotCount : null
     );
   };
 

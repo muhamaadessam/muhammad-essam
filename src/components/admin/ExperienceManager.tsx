@@ -1,24 +1,26 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { getExperiences, Experience } from '@/lib/services';
 import { addExperience, updateExperience, deleteExperience } from '@/lib/adminServices';
-import { uploadImageToCloudinary } from '@/lib/adminServices';
 
 export default function ExperienceManager() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingExperience, setEditingExperience] = useState<Partial<Experience> | null>(null);
 
-  useEffect(() => {
-    fetchExperiences();
-  }, []);
-
-  const fetchExperiences = async () => {
+  async function fetchExperiences() {
     const data = await getExperiences();
     setExperiences(data);
     setLoading(false);
-  };
+  }
+
+  useEffect(() => {
+    getExperiences().then((data) => {
+      setExperiences(data);
+      setLoading(false);
+    });
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,9 +34,9 @@ export default function ExperienceManager() {
       }
       setEditingExperience(null);
       fetchExperiences();
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      alert(`Error saving experience: ${err.message || err}`);
+      alert(`Error saving experience: ${err instanceof Error ? err.message : err}`);
     }
   };
 

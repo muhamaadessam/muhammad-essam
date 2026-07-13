@@ -1,10 +1,10 @@
 import { collection, doc, setDoc, updateDoc, deleteDoc, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from './firebase';
-import { Project, Skill, PortfolioData, FunFacts, Experience, Message } from './services';
+import { Project, Skill, PortfolioData, Experience, Message } from './services';
 
 // Helper to remove undefined fields which Firebase doesn't support
-const cleanObject = (obj: any) => {
-  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined));
+const cleanObject = (obj: object) => {
+  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined));
 };
 
 // --- Projects CRUD ---

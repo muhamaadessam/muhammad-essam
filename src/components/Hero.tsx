@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, ChevronRight } from 'lucide-react';
 import { getPortfolioData, PortfolioData, incrementCvDownloadCount } from '@/lib/services';
-import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Hero() {
   const [data, setData] = useState<PortfolioData | null>(null);
@@ -54,7 +54,7 @@ export default function Hero() {
           </div>
 
           <h1 className="text-6xl md:text-8xl font-bold text-white mb-6 tracking-tight leading-[1.1]">
-            Hi, I'm <br />
+            Hi, I&apos;m <br />
             <span className="text-primary block mt-2">
               {data?.name ? data.name.split(' ')[0] : 'Muhammad'}
             </span>
@@ -134,18 +134,14 @@ export default function Hero() {
                 y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
               }}
             >
-              {data?.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={data.image}
-                  alt={data.name || 'Muhammad Essam'}
-                  className="w-full h-full object-cover object-top pt-[10px]"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-dark-card/50 backdrop-blur-sm">
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
+              <Image
+                src="/profilePic.webp"
+                alt={data?.name || 'Muhammad Essam'}
+                fill
+                sizes="(max-width: 640px) 274px, (max-width: 1024px) 304px, 365px"
+                preload
+                className="object-cover object-top pt-[10px]"
+              />
             </motion.div>
           </div>
         </motion.div>
