@@ -21,53 +21,7 @@ export default function ProjectsManager() {
   }
 
   useEffect(() => {
-    // Auto-update the remaining 3 projects
-    const updateRemaining = async () => {
-      try {
-        console.log("Auto-updating remaining 3 projects...");
-
-        // Sportsmanship
-        await updateDoc(doc(db, 'projects', 'b4Y7VBXh3LRxMiofMv3K'), {
-          techStack: ['Flutter', 'Dart', 'Cubit / Bloc', 'Firebase', 'RESTful APIs'],
-          keyFeaturesAndBenefits: [
-            'Sports Prediction System: Predict outcomes of major Saudi football league matches like Al-Ittihad and Al-Hilal.',
-            'Points & Leaderboard: Earn points for accurate predictions and compete with fellow fans.',
-            'Interactive UI: Clean and engaging interface tailored for football enthusiasts.',
-            'Real-Time Updates: Get live updates on match outcomes and leaderboard standings.'
-          ]
-        });
-
-        // Mudawi
-        await updateDoc(doc(db, 'projects', 'm9stNpPpcvLJImPLLCPZ'), {
-          techStack: ['Flutter', 'Dart', 'Cubit / Bloc', 'Local Storage', 'Firebase'],
-          keyFeaturesAndBenefits: [
-            'Medical Reminders: Easily schedule doctor appointments and medication times.',
-            'Health Logging: Log blood pressure readings and other vital signs for future reference.',
-            'Privacy-Focused: Complete privacy with secure data storage.',
-            'Clean Interface: Simple and user-friendly design acting as your personal health assistant.'
-          ]
-        });
-
-        // CEO Buffet
-        await updateDoc(doc(db, 'projects', 'Guz12ZoE3RCISCnSzkJ3'), {
-          techStack: ['Flutter', 'Dart', 'Cubit / Bloc', 'Firebase', 'RESTful APIs'],
-          keyFeaturesAndBenefits: [
-            'Premium Catering Management: Streamline catering services and buffet arrangements for events.',
-            'Order Tracking: Manage and track food orders efficiently from preparation to delivery.',
-            'Elegant Interface: A premium UI suitable for high-end event management and client interactions.',
-            'Real-Time Synchronization: Keep all staff and management aligned with live order updates.'
-          ]
-        });
-
-        console.log("Auto-update finished successfully!");
-        alert("Remaining 3 projects updated successfully!");
-        fetchProjects();
-      } catch (e) {
-        console.error("Auto-update failed:", e);
-      }
-    };
-    
-    updateRemaining();
+    fetchProjects();
   }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,9 +44,9 @@ export default function ProjectsManager() {
       try {
         const files = Array.from(e.target.files);
         const urls = await Promise.all(files.map(f => uploadImageToCloudinary(f)));
-        setEditingProject((prev) => ({ 
-          ...prev, 
-          screenshots: [...(prev?.screenshots || []), ...urls] 
+        setEditingProject((prev) => ({
+          ...prev,
+          screenshots: [...(prev?.screenshots || []), ...urls]
         }));
       } catch {
         alert('Failed to upload screenshots');
@@ -139,30 +93,7 @@ export default function ProjectsManager() {
     }
   };
 
-  const handleMigrate = async () => {
-    if (!confirm('Run migration?')) return;
-    try {
-      setLoading(true);
-      const snapshot = await getDocs(collection(db, 'projects'));
-      for (const d of snapshot.docs) {
-        const data = d.data();
-        if (data.projectLanguages) {
-          await updateDoc(doc(db, 'projects', d.id), {
-            keyFeaturesAndBenefits: data.projectLanguages,
-            techStack: [],
-            projectLanguages: deleteField()
-          });
-        }
-      }
-      alert('Migration complete!');
-      fetchProjects();
-    } catch (e) {
-      console.error(e);
-      alert('Migration failed');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   if (loading) return (
     <div className="flex justify-center items-center py-20">
@@ -178,11 +109,9 @@ export default function ProjectsManager() {
           <p className="text-gray-400 mt-1 text-sm">Manage your portfolio projects and case studies.</p>
         </div>
         <div className="flex gap-4">
-          <button onClick={handleMigrate} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition-all text-sm">
-            Run Migration
-          </button>
+
           <button
-            onClick={() => setEditingProject({ projectName: '', projectDescription: '', projectImage: '', techStack: [], keyFeaturesAndBenefits: [], links: [], category: '', status: '', isFeatured: false, screenshots: [] })}
+            onClick={() => setEditingProject({ id: '', projectName: '', projectDescription: '', projectImage: '', techStack: [], keyFeaturesAndBenefits: [], links: [], category: '', status: '', isFeatured: false, screenshots: [] })}
             className="bg-primary hover:bg-primary-dark text-dark-bg px-6 py-3 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(102,252,241,0.3)] hover:shadow-[0_0_25px_rgba(102,252,241,0.5)] flex items-center gap-2 transform hover:scale-105"
           >
             <Plus className="w-5 h-5" />
@@ -225,39 +154,45 @@ export default function ProjectsManager() {
       </div>
 
       {editingProject && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="glass p-8 rounded-3xl w-full max-w-4xl my-8 border border-white/10 shadow-2xl relative">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 z-50 overflow-y-auto">
+          <div className="glass p-8 rounded-3xl w-full max-w-4xl mt-10 mb-10 border border-white/10 shadow-2xl relative">
             <button onClick={() => setEditingProject(null)} className="absolute top-6 right-6 text-gray-400 hover:text-white">✕</button>
             <h3 className="text-2xl font-bold mb-8 text-white">{editingProject.docId ? '✏️ Edit Project' : '✨ Add New Project'}</h3>
-            
+
             <form onSubmit={handleSave} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Project Name</label>
-                    <input required type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. My Cash App" value={editingProject.projectName || ''} onChange={e => setEditingProject({...editingProject, projectName: e.target.value})} />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1.5">Project Name</label>
+                      <input required type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. My Cash App" value={editingProject.projectName || ''} onChange={e => setEditingProject({ ...editingProject, projectName: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1.5">ID (Order)</label>
+                      <input required type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. 1" value={editingProject.id || ''} onChange={e => setEditingProject({ ...editingProject, id: e.target.value })} />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1.5">Category</label>
-                    <input required type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. Mobile App" value={editingProject.category || ''} onChange={e => setEditingProject({...editingProject, category: e.target.value})} />
+                    <input required type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. Mobile App" value={editingProject.category || ''} onChange={e => setEditingProject({ ...editingProject, category: e.target.value })} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1.5">Tech Stack</label>
                     <div className="space-y-2">
                       {(editingProject.techStack || []).map((tech, idx) => (
                         <div key={idx} className="flex gap-2">
-                          <input 
-                            type="text" 
-                            className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2 text-white transition-all outline-none" 
-                            placeholder="e.g. Flutter" 
-                            value={tech} 
+                          <input
+                            type="text"
+                            className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2 text-white transition-all outline-none"
+                            placeholder="e.g. Flutter"
+                            value={tech}
                             onChange={e => {
                               const newTechStack = [...(editingProject.techStack || [])];
                               newTechStack[idx] = e.target.value;
                               setEditingProject({ ...editingProject, techStack: newTechStack });
-                            }} 
+                            }}
                           />
-                          <button 
+                          <button
                             type="button"
                             onClick={() => {
                               const newTechStack = [...(editingProject.techStack || [])];
@@ -270,7 +205,7 @@ export default function ProjectsManager() {
                           </button>
                         </div>
                       ))}
-                      <button 
+                      <button
                         type="button"
                         onClick={() => {
                           setEditingProject({ ...editingProject, techStack: [...(editingProject.techStack || []), ''] });
@@ -287,18 +222,18 @@ export default function ProjectsManager() {
                     <div className="space-y-2">
                       {(editingProject.keyFeaturesAndBenefits || []).map((feature, idx) => (
                         <div key={idx} className="flex gap-2">
-                          <input 
-                            type="text" 
-                            className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2 text-white transition-all outline-none" 
-                            placeholder="e.g. Fast performance" 
-                            value={feature} 
+                          <input
+                            type="text"
+                            className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2 text-white transition-all outline-none"
+                            placeholder="e.g. Fast performance"
+                            value={feature}
                             onChange={e => {
                               const newFeatures = [...(editingProject.keyFeaturesAndBenefits || [])];
                               newFeatures[idx] = e.target.value;
                               setEditingProject({ ...editingProject, keyFeaturesAndBenefits: newFeatures });
-                            }} 
+                            }}
                           />
-                          <button 
+                          <button
                             type="button"
                             onClick={() => {
                               const newFeatures = [...(editingProject.keyFeaturesAndBenefits || [])];
@@ -311,7 +246,7 @@ export default function ProjectsManager() {
                           </button>
                         </div>
                       ))}
-                      <button 
+                      <button
                         type="button"
                         onClick={() => {
                           setEditingProject({ ...editingProject, keyFeaturesAndBenefits: [...(editingProject.keyFeaturesAndBenefits || []), ''] });
@@ -323,8 +258,60 @@ export default function ProjectsManager() {
                       </button>
                     </div>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Project Links</label>
+                    <div className="space-y-2">
+                      {(editingProject.links || []).map((lnk, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <input
+                            type="text"
+                            className="w-1/3 bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2 text-white transition-all outline-none"
+                            placeholder="Title (e.g. GitHub)"
+                            value={lnk.title || ''}
+                            onChange={e => {
+                              const newLinks = [...(editingProject.links || [])];
+                              newLinks[idx] = { ...newLinks[idx], title: e.target.value };
+                              setEditingProject({ ...editingProject, links: newLinks });
+                            }}
+                          />
+                          <input
+                            type="text"
+                            className="flex-1 bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-2 text-white transition-all outline-none"
+                            placeholder="URL (e.g. https://...)"
+                            value={lnk.link || ''}
+                            onChange={e => {
+                              const newLinks = [...(editingProject.links || [])];
+                              newLinks[idx] = { ...newLinks[idx], link: e.target.value };
+                              setEditingProject({ ...editingProject, links: newLinks });
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newLinks = [...(editingProject.links || [])];
+                              newLinks.splice(idx, 1);
+                              setEditingProject({ ...editingProject, links: newLinks });
+                            }}
+                            className="bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white px-3 py-2 rounded-xl transition-all shrink-0"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingProject({ ...editingProject, links: [...(editingProject.links || []), { title: '', link: '' }] });
+                        }}
+                        className="bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Link
+                      </button>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-3 pt-2">
-                    <input type="checkbox" id="isFeatured" className="w-5 h-5 rounded border-white/10 bg-black/40 text-primary focus:ring-primary/50" checked={editingProject.isFeatured || false} onChange={e => setEditingProject({...editingProject, isFeatured: e.target.checked})} />
+                    <input type="checkbox" id="isFeatured" className="w-5 h-5 rounded border-white/10 bg-black/40 text-primary focus:ring-primary/50" checked={editingProject.isFeatured || false} onChange={e => setEditingProject({ ...editingProject, isFeatured: e.target.checked })} />
                     <label htmlFor="isFeatured" className="text-sm font-medium text-gray-300 cursor-pointer">Featured Project</label>
                   </div>
                 </div>
@@ -332,7 +319,7 @@ export default function ProjectsManager() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1.5">Description</label>
-                    <textarea required className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none h-32 resize-none" placeholder="Describe the project..." value={editingProject.projectDescription || ''} onChange={e => setEditingProject({...editingProject, projectDescription: e.target.value})} />
+                    <textarea required className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none h-32 resize-none" placeholder="Describe the project..." value={editingProject.projectDescription || ''} onChange={e => setEditingProject({ ...editingProject, projectDescription: e.target.value })} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1.5">Main Image</label>
@@ -341,11 +328,11 @@ export default function ProjectsManager() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={editingProject.projectImage} alt="Preview" className="h-16 w-24 object-cover rounded-lg shadow-md" />
                       ) : (
-                        <div className="h-16 w-24 bg-black/40 rounded-lg flex items-center justify-center text-gray-500 border border-dashed border-white/20"><ImageIcon className="w-6 h-6"/></div>
+                        <div className="h-16 w-24 bg-black/40 rounded-lg flex items-center justify-center text-gray-500 border border-dashed border-white/20"><ImageIcon className="w-6 h-6" /></div>
                       )}
                       <div className="flex-1">
                         <input type="file" onChange={handleImageUpload} className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer" accept="image/*" />
-                        {uploadingImage && <div className="text-xs text-primary mt-2 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin"/> Uploading...</div>}
+                        {uploadingImage && <div className="text-xs text-primary mt-2 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Uploading...</div>}
                       </div>
                     </div>
                   </div>
@@ -370,9 +357,9 @@ export default function ProjectsManager() {
                   <label className="aspect-[9/16] rounded-xl border-2 border-dashed border-white/20 hover:border-primary/50 bg-black/20 flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors cursor-pointer relative overflow-hidden">
                     <input type="file" multiple onChange={handleScreenshotsUpload} className="hidden" accept="image/*" />
                     {uploadingScreenshots ? (
-                      <div className="flex flex-col items-center gap-2"><Loader2 className="w-6 h-6 animate-spin"/> <span className="text-xs font-medium">Uploading...</span></div>
+                      <div className="flex flex-col items-center gap-2"><Loader2 className="w-6 h-6 animate-spin" /> <span className="text-xs font-medium">Uploading...</span></div>
                     ) : (
-                      <div className="flex flex-col items-center gap-2"><Plus className="w-6 h-6"/> <span className="text-xs font-medium">Add Images</span></div>
+                      <div className="flex flex-col items-center gap-2"><Plus className="w-6 h-6" /> <span className="text-xs font-medium">Add Images</span></div>
                     )}
                   </label>
                 </div>

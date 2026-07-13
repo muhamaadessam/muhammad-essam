@@ -59,11 +59,22 @@ export async function getProjects(): Promise<Project[]> {
   try {
     const projectsCol = collection(db, 'projects');
     const projectSnapshot = await getDocs(projectsCol);
-    return projectSnapshot.docs.map(doc => ({
+    const projects = projectSnapshot.docs.map(doc => ({
       docId: doc.id,
       id: doc.id,
       ...doc.data()
     })) as Project[];
+
+    return projects.sort((a, b) => {
+      const idA = parseInt(String(a.id), 10);
+      const idB = parseInt(String(b.id), 10);
+      
+      if (!isNaN(idA) && !isNaN(idB)) {
+        return idA - idB;
+      }
+      
+      return String(a.id).localeCompare(String(b.id));
+    });
   } catch (error) {
     console.error('Error fetching projects:', error);
     return [];
