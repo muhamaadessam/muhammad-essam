@@ -223,6 +223,11 @@ export default function ProjectDetailsPage() {
                 <Sparkles className="w-4 h-4" />
                 {project.category}
               </span>
+              {project.status && (
+                <span className="inline-flex items-center px-4 py-1.5 glass text-blue-400 border border-blue-500/30 rounded-full text-sm font-bold uppercase tracking-widest">
+                  {project.status.replaceAll('-', ' ')}
+                </span>
+              )}
             </div>
             
             <h1 className="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight leading-tight">
@@ -236,6 +241,17 @@ export default function ProjectDetailsPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-4 mb-10">
+              {project.status?.toLowerCase() === 'testing' && project.testingGroupLink?.startsWith('https://') && (
+                <a
+                  href={project.testingGroupLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-8 py-4 font-bold rounded-xl transition-all duration-300 flex items-center gap-2 hover:scale-105 shadow-lg bg-blue-500 text-white hover:bg-blue-400"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  Join Testing Group
+                </a>
+              )}
               {project.links && project.links.map((lnk, i) => (
                 <a 
                   key={i}

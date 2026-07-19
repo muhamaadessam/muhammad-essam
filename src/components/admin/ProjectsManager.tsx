@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { getProjects, Project } from '@/lib/services';
 import { addProject, updateProject, deleteProject, uploadImageToCloudinary } from '@/lib/adminServices';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, updateDoc, doc, deleteField } from 'firebase/firestore';
 import { Trash2, Edit2, Plus, Image as ImageIcon, Loader2 } from 'lucide-react';
 
 export default function ProjectsManager() {
@@ -21,7 +19,10 @@ export default function ProjectsManager() {
   }
 
   useEffect(() => {
-    fetchProjects();
+    getProjects().then((data) => {
+      setProjects(data);
+      setLoading(false);
+    });
   }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,6 +67,10 @@ export default function ProjectsManager() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProject) return;
+    if (editingProject.status === 'testing' && !editingProject.testingGroupLink?.startsWith('https://')) {
+      alert('A valid HTTPS testing group link is required while the project is in Testing.');
+      return;
+    }
 
     try {
       if (editingProject.docId) {
@@ -111,7 +116,7 @@ export default function ProjectsManager() {
         <div className="flex gap-4">
 
           <button
-            onClick={() => setEditingProject({ id: '', projectName: '', projectDescription: '', projectImage: '', techStack: [], keyFeaturesAndBenefits: [], links: [], category: '', status: '', isFeatured: false, screenshots: [] })}
+            onClick={() => setEditingProject({ id: '', projectName: '', projectDescription: '', projectImage: '', techStack: [], keyFeaturesAndBenefits: [], links: [], category: '', status: '', testingGroupLink: '', isFeatured: false, screenshots: [] })}
             className="bg-primary hover:bg-primary-dark text-dark-bg px-6 py-3 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(102,252,241,0.3)] hover:shadow-[0_0_25px_rgba(102,252,241,0.5)] flex items-center gap-2 transform hover:scale-105"
           >
             <Plus className="w-5 h-5" />
@@ -132,7 +137,7 @@ export default function ProjectsManager() {
                   <ImageIcon className="w-8 h-8" />
                 </div>
               )}
-              <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-3 right-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <button onClick={() => setEditingProject(project)} className="p-2 bg-black/60 hover:bg-primary text-white rounded-lg backdrop-blur-md transition-colors">
                   <Edit2 className="w-4 h-4" />
                 </button>
@@ -144,6 +149,8 @@ export default function ProjectsManager() {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-bold px-2 py-1 rounded bg-primary/10 text-primary uppercase tracking-wider">{project.category}</span>
+                {project.status && <span className="text-xs font-bold px-2 py-1 rounded bg-blue-500/10 text-blue-400 uppercase tracking-wider">{project.status.replaceAll('-', ' ')}</span>}
+                {project.status === 'testing' && !project.testingGroupLink?.startsWith('https://') && <span className="text-xs font-bold px-2 py-1 rounded bg-red-500/10 text-red-400 uppercase tracking-wider">Missing testing group link</span>}
                 {project.isFeatured && <span className="text-xs font-bold px-2 py-1 rounded bg-yellow-500/10 text-yellow-500 uppercase tracking-wider">Featured</span>}
               </div>
               <h3 className="font-bold text-xl text-white mb-1">{project.projectName}</h3>
@@ -176,6 +183,24 @@ export default function ProjectsManager() {
                     <label className="block text-sm font-medium text-gray-300 mb-1.5">Category</label>
                     <input required type="text" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="e.g. Mobile App" value={editingProject.category || ''} onChange={e => setEditingProject({ ...editingProject, category: e.target.value })} />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Status</label>
+                    <select required className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" value={editingProject.status || ''} onChange={e => setEditingProject({ ...editingProject, status: e.target.value })}>
+                      <option value="" disabled>Select status</option>
+                      <option value="planning">Planning</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="testing">Testing</option>
+                      <option value="completed">Completed</option>
+                      <option value="client-account-closed">Client Account Closed</option>
+                    </select>
+                  </div>
+                  {editingProject.status === 'testing' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1.5">Testing Group Link</label>
+                      <input required type="url" pattern="https://.*" className="w-full bg-black/40 border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-xl px-4 py-3 text-white transition-all outline-none" placeholder="https://groups.google.com/g/..." value={editingProject.testingGroupLink || ''} onChange={e => setEditingProject({ ...editingProject, testingGroupLink: e.target.value })} />
+                      <p className="text-xs text-red-400 mt-1.5">Required while the project is in Testing.</p>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1.5">Tech Stack</label>
                     <div className="space-y-2">

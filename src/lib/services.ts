@@ -17,6 +17,7 @@ export interface Project {
   links: LinkModel[];
   category: string;
   status: string;
+  testingGroupLink?: string;
   isFeatured: boolean;
   screenshots?: string[];
 }
@@ -193,11 +194,19 @@ async function getTelegramConfig() {
   return null;
 }
 
+const IGNORED_VISITOR_IDS = new Set(['1777640653418', '1777681421611']);
+
+function isIgnoredVisitor(visitorId: string | null): boolean {
+  return visitorId !== null && IGNORED_VISITOR_IDS.has(visitorId);
+}
+
 export async function trackVisitor(): Promise<void> {
   try {
     if (typeof window === 'undefined') return;
 
     let visitorId = localStorage.getItem('visitor_id');
+    if (isIgnoredVisitor(visitorId)) return;
+
     let isNewVisitor = false;
 
     if (!visitorId) {
@@ -267,19 +276,17 @@ export async function trackVisitor(): Promise<void> {
 
 export async function incrementCvDownloadCount(): Promise<void> {
   try {
+    const visitorId = typeof window !== 'undefined' ? localStorage.getItem('visitor_id') : null;
+    if (isIgnoredVisitor(visitorId)) return;
+
     const statsDoc = doc(db, 'stats', 'cv_downloads');
     await updateDoc(statsDoc, {
       count: increment(1)
     }).catch(() => {});
 
-    let visitorId = 'Unknown';
-    if (typeof window !== 'undefined') {
-      visitorId = localStorage.getItem('visitor_id') || 'Unknown';
-    }
-
     const config = await getTelegramConfig();
     if (config?.bot_token && config?.chat_id) {
-      const message = `📄 *CV Downloaded!*\n\n*Visitor ID:* \`${visitorId}\`\nSomeone just downloaded your CV!`;
+      const message = `📄 *CV Downloaded!*\n\n*Visitor ID:* \`${visitorId || 'Unknown'}\`\nSomeone just downloaded your CV!`;
       const url = `https://api.telegram.org/bot${config.bot_token}/sendMessage`;
       await fetch(url, {
         method: 'POST',

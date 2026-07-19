@@ -78,11 +78,18 @@ export default function Projects() {
                 <div className="p-6 flex flex-col flex-grow relative">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{project.projectName}</h3>
-                    {project.category && (
-                      <span className="text-[10px] px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full font-bold uppercase tracking-wider">
-                        {project.category}
-                      </span>
-                    )}
+                    <div className="flex flex-col items-end gap-2">
+                      {project.category && (
+                        <span className="text-[10px] px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full font-bold uppercase tracking-wider">
+                          {project.category}
+                        </span>
+                      )}
+                      {project.status && (
+                        <span className="text-[10px] px-2.5 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full font-bold uppercase tracking-wider">
+                          {project.status.replaceAll('-', ' ')}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <p className="text-gray-400 mb-6 flex-grow text-sm leading-relaxed line-clamp-3">{project.projectDescription}</p>
                   
