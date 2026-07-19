@@ -69,11 +69,11 @@ export async function getProjects(): Promise<Project[]> {
     return projects.sort((a, b) => {
       const idA = parseInt(String(a.id), 10);
       const idB = parseInt(String(b.id), 10);
-      
+
       if (!isNaN(idA) && !isNaN(idB)) {
         return idA - idB;
       }
-      
+
       return String(a.id).localeCompare(String(b.id));
     });
   } catch (error) {
@@ -127,16 +127,16 @@ export async function getExperiences(): Promise<Experience[]> {
       id: doc.id,
       ...doc.data()
     })) as Experience[];
-    
+
     // Sort by endDate descending (null is highest/present), then startDate descending
     return experiences.sort((a, b) => {
       const aEnd = a.endDate || '9999-99'; // 'Present'
       const bEnd = b.endDate || '9999-99'; // 'Present'
-      
+
       if (aEnd !== bEnd) {
         return bEnd.localeCompare(aEnd);
       }
-      
+
       const aStart = a.startDate || '';
       const bStart = b.startDate || '';
       return bStart.localeCompare(aStart);
@@ -194,7 +194,7 @@ async function getTelegramConfig() {
   return null;
 }
 
-const IGNORED_VISITOR_IDS = new Set(['1777640653418', '1777681421611']);
+const IGNORED_VISITOR_IDS = new Set(['1777640653418', '1777681421611', '1783389357146']);
 
 function isIgnoredVisitor(visitorId: string | null): boolean {
   return visitorId !== null && IGNORED_VISITOR_IDS.has(visitorId);
@@ -217,7 +217,7 @@ export async function trackVisitor(): Promise<void> {
 
     const docRef = doc(db, 'stats', 'visitors');
     const snapshot = await getDoc(docRef);
-    
+
     let totalVisits = 1;
     let totalVisitors = 1;
 
@@ -225,7 +225,7 @@ export async function trackVisitor(): Promise<void> {
       const data = snapshot.data();
       const users = data.users || {};
       const currentCount = users[visitorId] || 0;
-      
+
       isNewVisitor = currentCount === 0;
       totalVisitors = isNewVisitor ? Object.keys(users).length + 1 : Object.keys(users).length;
       totalVisits = (data.total_visites || 0) + 1;
@@ -282,7 +282,7 @@ export async function incrementCvDownloadCount(): Promise<void> {
     const statsDoc = doc(db, 'stats', 'cv_downloads');
     await updateDoc(statsDoc, {
       count: increment(1)
-    }).catch(() => {});
+    }).catch(() => { });
 
     const config = await getTelegramConfig();
     if (config?.bot_token && config?.chat_id) {
